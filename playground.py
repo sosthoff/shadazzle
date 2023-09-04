@@ -6,6 +6,7 @@ import json
 import os
 from gtts import gTTS
 from io import BytesIO
+from PIL import Image
 
 from langchain.agents import create_pandas_dataframe_agent
 from langchain.chains import APIChain
@@ -18,7 +19,7 @@ import streamlit as st
 from utils.trips import CompanyTrip
 # If you return an object on a line by itself in Streamlit,
 # it will render to the screen in markdown
-"# Shadazzle Support Hotline"
+"# Shadazzle Answer-A-Tron 5000"
 
 company = "shadazzle"
 
@@ -37,19 +38,25 @@ company_trip = get_company_trip(company)
 
 # This is where the fake APIs are hosted
 # You can append ?_limit=10&_page=2 https://github.com/typicode/json-server#paginate
-profiles_url = f"https://llm-companies.cyclic.app/api/{company}/profiles"
+#profiles_url = f"https://llm-companies.cyclic.app/api/{company}/profiles"
 
+customer_profile = pd.read_json(os.path.join("trips", "data", "customer.json"), typ="series")
+company_context = pd.read_json(os.path.join("trips", "data", "company.json"), typ="series")
 
-
+image = Image.open('./OIG.jpeg')
+st.image(image)
 # This is a context manager for forms and why it's using this `with` pattern
 with st.form("company-prompt"):
     company_prompt = st.text_area(f"How can we help you today?")
+    company_prompt = company_prompt + " My name is Sebastian. Please talk to me directly in an empathetic way, but don't meantion it. You are answering as the Shadazzle Answer-A-Tron 5000 for the company Shadazzle, please meantion that."
+    #company_prompt = company_prompt + customer_profile
+    #company_prompt = company_prompt + company_context
     # Submitted will be true if they pressed the button!
     # This is powerful because you can only re-render when they press the button
     submitted = st.form_submit_button("Ask")
     if submitted:
         answer = company_trip.ask(company_prompt)
-        st.markdown(answer)
+        #st.markdown(answer)
         tts = gTTS(answer, lang='en')
         tts.write_to_fp(sound_file)
         st.audio(sound_file)
